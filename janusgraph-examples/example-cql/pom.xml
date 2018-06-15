@@ -38,5 +38,54 @@
         <example.config>${project.basedir}/conf/jgex-cql.properties</example.config>
         <logback.config>${project.basedir}/conf/logback.xml</logback.config>
     </properties>
+    
+    <build>
+	    <pluginManagement>
+	      <plugins>
+	        <plugin>
+	          <groupId>org.apache.maven.plugins</groupId>
+	          <artifactId>maven-shade-plugin</artifactId>
+	          <version>3.1.1</version>
+	        </plugin>
+	      </plugins>
+	    </pluginManagement>
+
+        <plugins>
+        
+	      <plugin>
+	        <groupId>org.apache.maven.plugins</groupId>
+	        <artifactId>maven-shade-plugin</artifactId>
+	        <configuration>
+	           <outputFile>target/janusgraph-test.jar</outputFile>
+	           <filters>
+	            <filter>
+	              <artifact>*:*</artifact>
+	              <excludes>
+	                <exclude>META-INF/*.SF</exclude>
+	                <exclude>META-INF/*.DSA</exclude>
+	                <exclude>META-INF/*.RSA</exclude>
+	              </excludes>
+	            </filter>
+	          </filters>
+	            <transformers>
+	                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+	                  <mainClass>org.janusgraph.example.JanusGraphApp</mainClass>
+	                </transformer>
+
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                        <resource>logback.xml</resource>
+                        <file>conf/logback.xml</file>
+                    </transformer>
+	
+	                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+
+             
+	              </transformers>        
+	            </configuration>
+	      </plugin>
+        
+        </plugins>   
+         
+    </build>
 
 </project>

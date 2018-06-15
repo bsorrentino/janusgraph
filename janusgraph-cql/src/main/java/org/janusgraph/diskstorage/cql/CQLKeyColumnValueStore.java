@@ -220,7 +220,7 @@ public class CQLKeyColumnValueStore implements KeyColumnValueStore {
                 .withOptions()
                 .compressionOptions(compressionOptions(configuration))
                 .compactionOptions(compactionOptions(configuration))
-                .compactStorage());
+                /*.compactStorage()*/);
     }
 
     private static CompressionOptions compressionOptions(final Configuration configuration) {
