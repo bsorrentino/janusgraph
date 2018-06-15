@@ -102,6 +102,7 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
 import com.datastax.driver.core.policies.TokenAwarePolicy;
+import com.datastax.driver.dse.DseCluster;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import io.vavr.Tuple;
@@ -219,7 +220,8 @@ public class CQLStoreManager extends DistributedStoreManager implements KeyColum
             throw new PermanentBackendException("Error initialising cluster contact points", e);
         }
 
-        final Builder builder = Cluster.builder()
+        final Builder builder = DseCluster.builder()
+        //final Builder builder = Cluster.builder()
                 .addContactPointsWithPorts(contactPoints)
                 .withClusterName(configuration.get(CLUSTER_NAME));
 
