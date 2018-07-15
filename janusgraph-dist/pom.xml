@@ -470,6 +470,33 @@
 
     <profiles>
         <profile>
+            <id>dse</id>
+
+			<dependencies>
+		
+				<dependency>
+					<groupId>${project.groupId}</groupId>
+					<artifactId>janusgraph-all</artifactId>
+					<version>${project.version}</version>
+					<exclusions>
+					   <exclusion>
+		                    <groupId>com.datastax.cassandra</groupId>
+		                    <artifactId>cassandra-driver-core</artifactId>
+					   </exclusion>
+					</exclusions>
+				</dependency>
+
+		        <dependency>
+		          <groupId>com.datastax.dse</groupId>
+		          <artifactId>dse-java-driver-core</artifactId>
+		          <version>1.4.1</version>
+		        </dependency>
+		
+			</dependencies>
+		            
+            
+        </profile>
+        <profile>
             <id>pkg-tools</id>
 
             <build>
