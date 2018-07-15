@@ -53,6 +53,7 @@ import static org.janusgraph.graphdb.configuration.GraphDatabaseConfiguration.GR
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -102,7 +103,6 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
 import com.datastax.driver.core.policies.TokenAwarePolicy;
-import com.datastax.driver.dse.DseCluster;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import io.vavr.Tuple;
@@ -207,7 +207,23 @@ public class CQLStoreManager extends DistributedStoreManager implements KeyColum
         this.storeFeatures = fb.build();
         this.openStores = new ConcurrentHashMap<>();
     }
-
+    
+    private Builder loadClusterBuilder() {
+        try {
+            
+            final Class<?> clusterBuilderClass = Class.forName( "com.datastax.driver.dse.DseCluster");
+            LOGGER.info( "loaded Driver 'DseCluster'");
+            
+            return (Builder)clusterBuilderClass.getMethod("builder").invoke(null);
+            
+        } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            // Fallback to standard Cassandra Builder
+            LOGGER.info( "Error loading Driver 'DseCluster', standard will be used - {}", e.getMessage());
+            return Cluster.builder();
+        }
+        
+    }
+    
     Cluster initializeCluster() throws PermanentBackendException {
         final Configuration configuration = getStorageConfig();
 
@@ -222,8 +238,7 @@ public class CQLStoreManager extends DistributedStoreManager implements KeyColum
             throw new PermanentBackendException("Error initialising cluster contact points", e);
         }
 
-        final Builder builder = DseCluster.builder()
-        //final Builder builder = Cluster.builder()
+        final Builder builder = loadClusterBuilder()
                 .addContactPointsWithPorts(contactPoints)
                 .withClusterName(configuration.get(CLUSTER_NAME));
 
