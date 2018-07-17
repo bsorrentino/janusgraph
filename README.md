@@ -1,3 +1,11 @@
+### Fork Reason
+
+>
+> Such fork concerning the support for **LDAP authentication on Cassandra**
+>
+> **see** [janusgraph-cql implementation note](janusgraph-cql/README.md)
+>
+
 [![JanusGraph logo](janusgraph.png)](http://janusgraph.org/)
 
 JanusGraph is a highly scalable [graph database](http://en.wikipedia.org/wiki/Graph_database)
