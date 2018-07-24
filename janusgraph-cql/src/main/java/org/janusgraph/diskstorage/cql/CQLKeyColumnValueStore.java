@@ -222,10 +222,6 @@ public class CQLKeyColumnValueStore implements KeyColumnValueStore {
                 .addColumn(VALUE_COLUMN_NAME, DataType.blob())
                 .withOptions()
                 .compressionOptions(compressionOptions(configuration))
-<<<<<<< HEAD
-                .compactionOptions(compactionOptions(configuration))
-                /*.compactStorage()*/);
-=======
                 .compactionOptions(compactionOptions(configuration));
         // COMPACT STORAGE is allowed on Cassandra 2 or earlier
         // when COMPACT STORAGE is allowed, the default is to enable it
@@ -234,7 +230,6 @@ public class CQLKeyColumnValueStore implements KeyColumnValueStore {
             ? configuration.get(CF_COMPACT_STORAGE)
             : allowCompactStorage;
         session.execute(useCompactStorage ? createTable.compactStorage() : createTable);
->>>>>>> original/master
     }
 
     private static CompressionOptions compressionOptions(final Configuration configuration) {
