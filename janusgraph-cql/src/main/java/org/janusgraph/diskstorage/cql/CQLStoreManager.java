@@ -215,6 +215,13 @@ public class CQLStoreManager extends DistributedStoreManager implements KeyColum
         this.openStores = new ConcurrentHashMap<>();
     }
     
+    /**
+     * Look for DSE Cassandra Enterprise Java Driver in the classpath. 
+     * If found, it will be used,  otherwise the Open Source version will be used
+     * 
+     * This strategy has been based on <a href="https://groups.google.com/d/msg/janusgraph-dev/dCtm74lGgUg/zUEa3bfFBAAJ">suggestion from Jason Plurad</a>
+     * 
+     */
     private Builder loadClusterBuilder() {
         try {
             
