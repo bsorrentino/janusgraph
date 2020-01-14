@@ -18,6 +18,7 @@ import com.google.common.base.Preconditions;
 import org.janusgraph.core.*;
 import org.janusgraph.core.schema.JanusGraphSchemaType;
 import org.janusgraph.graphdb.relations.RelationIdentifier;
+import org.janusgraph.graphdb.relations.RelationIdentifierUtils;
 import org.janusgraph.graphdb.types.VertexLabelVertex;
 import org.janusgraph.graphdb.types.vertices.EdgeLabelVertex;
 import org.janusgraph.graphdb.types.vertices.PropertyKeyVertex;
@@ -60,7 +61,8 @@ public enum ElementCategory {
     }
 
     public boolean matchesConstraint(JanusGraphSchemaType type, JanusGraphElement element) {
-        Preconditions.checkArgument(type != null && element!=null);
+        Preconditions.checkNotNull(type);
+        Preconditions.checkNotNull(element);
         assert isInstance(element);
         assert isValidConstraint(type);
         switch(this) {
@@ -92,10 +94,10 @@ public enum ElementCategory {
                 return tx.getVertex((Long) elementId);
             case EDGE:
                 Preconditions.checkArgument(elementId instanceof RelationIdentifier);
-                return ((RelationIdentifier)elementId).findEdge(tx);
+                return RelationIdentifierUtils.findEdge(((RelationIdentifier)elementId), tx);
             case PROPERTY:
                 Preconditions.checkArgument(elementId instanceof RelationIdentifier);
-                return ((RelationIdentifier)elementId).findProperty(tx);
+                return RelationIdentifierUtils.findProperty(((RelationIdentifier)elementId), tx);
             default: throw new IllegalArgumentException();
         }
     }

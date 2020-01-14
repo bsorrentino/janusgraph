@@ -3,6 +3,7 @@ target/
 .idea/
 *.iml
 *.DS_Store
+.vscode/
 /_bsp/
 /output/
 /docker/*.zip
@@ -60,3 +61,4 @@ cov-int.tar.gz
 cov-int/
 
 .factorypath
+/site/

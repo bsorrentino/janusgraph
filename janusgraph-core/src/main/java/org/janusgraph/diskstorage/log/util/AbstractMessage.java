@@ -14,14 +14,13 @@
 
 package org.janusgraph.diskstorage.log.util;
 
-import com.google.common.base.Preconditions;
-
 import org.janusgraph.diskstorage.StaticBuffer;
 import org.janusgraph.diskstorage.log.Message;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import com.google.common.base.Preconditions;
 
 import java.time.Instant;
+import java.util.Objects;
 
 /**
  * Abstract implementation of {@link org.janusgraph.diskstorage.log.Message} which exposes the timestamp, sender, and payload
@@ -68,13 +67,13 @@ public abstract class AbstractMessage implements Message {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(content).append(timestamp).append(senderId).toHashCode();
+        return Objects.hash(content, timestamp, senderId);
     }
 
     @Override
     public boolean equals(Object other) {
         if (this==other) return true;
-        else if (other==null || !getClass().isInstance(other)) return false;
+        else if (!getClass().isInstance(other)) return false;
         AbstractMessage msg = (AbstractMessage)other;
         return timestamp.equals(msg.timestamp) && senderId.equals(msg.senderId) && content.equals(msg.content);
     }

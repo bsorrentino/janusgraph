@@ -34,8 +34,8 @@ import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,7 +58,7 @@ public abstract class LuceneExample {
     final private Map<String,SpatialStrategy> spatial= new HashMap<>();
     final private SpatialContext ctx = SpatialContext.GEO;
 
-    @Before
+    @BeforeEach
     public void setup() {
         if (path.exists()) IOUtils.deleteDirectory(path,false);
         if (!path.exists() && path.isDirectory()) {
@@ -114,7 +114,7 @@ public abstract class LuceneExample {
 
         SpatialArgs args = new SpatialArgs(SpatialOperation.Intersects,Geoshape.circle(51.666167,6.58905,450).getShape());
 
-        filter.add(LongPoint.newRangeQuery("time",(long)1000342034,(long)1000342034), BooleanClause.Occur.MUST);
+        filter.add(LongPoint.newRangeQuery("time", 1000342034, 1000342034), BooleanClause.Occur.MUST);
 
 
         filter.add(new PrefixQuery(new Term("city_str","B")), BooleanClause.Occur.MUST);

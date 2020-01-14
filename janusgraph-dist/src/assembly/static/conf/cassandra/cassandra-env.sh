@@ -257,7 +257,7 @@ fi
 # uncomment to have Cassandra JVM log internal method compilation (developers only)
 # JVM_OPTS="$JVM_OPTS -XX:+UnlockDiagnosticVMOptions -XX:+LogCompilation"
 
-# Prefer binding to IPv4 network intefaces (when net.ipv6.bindv6only=1). See
+# Prefer binding to IPv4 network interfaces (when net.ipv6.bindv6only=1). See
 # http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6342561 (short version:
 # comment out this entry to enable IPv6 support).
 JVM_OPTS="$JVM_OPTS -Djava.net.preferIPv4Stack=true"
@@ -298,7 +298,7 @@ fi
 
 # To use mx4j, an HTML interface for JMX, add mx4j-tools.jar to the lib/
 # directory.
-# See http://wiki.apache.org/cassandra/Operations#Monitoring_with_MX4J
+# See https://wiki.apache.org/cassandra/Operations#Monitoring_with_MX4J
 # By default mx4j listens on 0.0.0.0:8081. Uncomment the following lines
 # to control its listen address and port.
 #MX4J_ADDRESS="-Dmx4jaddress=127.0.0.1"

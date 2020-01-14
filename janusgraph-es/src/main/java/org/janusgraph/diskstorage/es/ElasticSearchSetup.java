@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -51,8 +52,10 @@ public enum ElasticSearchSetup {
         }
     };
 
-    static void applySettingsFromJanusGraphConf(Map<String, Object> settings,
-                                                Configuration config) {
+    static Map<String, Object> getSettingsFromJanusGraphConf(Configuration config) {
+
+        final Map<String, Object> settings = new HashMap<>();
+
         int keysLoaded = 0;
         final Map<String,Object> configSub = config.getSubset(ElasticSearchIndex.ES_CREATE_EXTRAS_NS);
         for (Map.Entry<String,Object> entry : configSub.entrySet()) {
@@ -66,7 +69,7 @@ public enum ElasticSearchSetup {
             } else if (val.getClass().isArray()) {
                 // As with Lists, but now for arrays
                 // The Object copy[] business lets us avoid repetitive primitive array type checking and casting
-                Object copy[] = new Object[Array.getLength(val)];
+                Object[] copy = new Object[Array.getLength(val)];
                 for (int i= 0; i < copy.length; i++) {
                     copy[i] = Array.get(val, i);
                 }
@@ -79,6 +82,7 @@ public enum ElasticSearchSetup {
             keysLoaded++;
         }
         log.debug("Loaded {} settings from the {} JanusGraph config namespace", keysLoaded, ElasticSearchIndex.ES_CREATE_EXTRAS_NS);
+        return settings;
     }
 
     private static final Logger log = LoggerFactory.getLogger(ElasticSearchSetup.class);
@@ -90,8 +94,7 @@ public enum ElasticSearchSetup {
         private final ElasticSearchClient client;
 
         public Connection(ElasticSearchClient client) {
-            this.client = client;
-            Preconditions.checkNotNull(this.client, "Unable to instantiate Elasticsearch Client object");
+            this.client = Preconditions.checkNotNull(client, "Unable to instantiate Elasticsearch Client object");
         }
 
         public ElasticSearchClient getClient() {

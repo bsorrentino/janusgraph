@@ -16,10 +16,11 @@ package org.janusgraph.core;
 
 import com.google.common.base.Preconditions;
 import org.apache.tinkerpop.gremlin.structure.Direction;
+import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 
 /**
  * The multiplicity of edges between vertices for a given label. Multiplicity here is understood in the same sense as
- * for UML class diagrams <a href="http://en.wikipedia.org/wiki/Class_diagram#Multiplicity">http://en.wikipedia.org/wiki/Class_diagram#Multiplicity</a>
+ * for UML class diagrams <a href="https://en.wikipedia.org/wiki/Class_diagram#Multiplicity">https://en.wikipedia.org/wiki/Class_diagram#Multiplicity</a>
  *
  * @author Matthias Broecheler (me@matthiasb.com)
  */
@@ -29,7 +30,7 @@ public enum Multiplicity {
      * The given edge label specifies a multi-graph, meaning that the multiplicity is not constrained and that
      * there may be multiple edges of this label between any given pair of vertices.
      *
-     * <a href="http://en.wikipedia.org/wiki/Multigraph">http://en.wikipedia.org/wiki/Multigraph</a>
+     * <a href="https://en.wikipedia.org/wiki/Multigraph">https://en.wikipedia.org/wiki/Multigraph</a>
      */
     MULTI,
 
@@ -96,6 +97,15 @@ public enum Multiplicity {
             case LIST: return MULTI;
             case SET: return SIMPLE;
             case SINGLE: return MANY2ONE;
+            default: throw new AssertionError("Unknown cardinality: " + cardinality);
+        }
+    }
+    public static Multiplicity convert(VertexProperty.Cardinality cardinality) {
+        Preconditions.checkNotNull(cardinality);
+        switch(cardinality) {
+            case list: return MULTI;
+            case set: return SIMPLE;
+            case single: return MANY2ONE;
             default: throw new AssertionError("Unknown cardinality: " + cardinality);
         }
     }

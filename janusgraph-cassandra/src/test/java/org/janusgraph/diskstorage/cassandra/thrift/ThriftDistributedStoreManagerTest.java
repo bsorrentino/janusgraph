@@ -14,34 +14,32 @@
 
 package org.janusgraph.diskstorage.cassandra.thrift;
 
-import org.janusgraph.CassandraStorageSetup;
+import org.janusgraph.JanusGraphCassandraThriftContainer;
 import org.janusgraph.diskstorage.BackendException;
 import org.janusgraph.diskstorage.DistributedStoreManagerTest;
 import org.janusgraph.diskstorage.common.DistributedStoreManager.Deployment;
-import org.janusgraph.testcategory.OrderedKeyStoreTests;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.janusgraph.testutil.FeatureFlag;
+import org.janusgraph.testutil.JanusGraphFeature;
+import org.junit.jupiter.api.*;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Testcontainers
 public class ThriftDistributedStoreManagerTest extends DistributedStoreManagerTest<CassandraThriftStoreManager> {
+    @Container
+    public static final JanusGraphCassandraThriftContainer thriftContainer = new JanusGraphCassandraThriftContainer();
 
-    @BeforeClass
-    public static void startCassandra() {
-        CassandraStorageSetup.startCleanEmbedded();
-    }
 
-    @Before
+    @BeforeEach
     public void setUp() throws BackendException {
         manager = new CassandraThriftStoreManager(
-                CassandraStorageSetup.getCassandraThriftConfiguration(this.getClass().getSimpleName()));
+            thriftContainer.getThriftConfiguration(this.getClass().getSimpleName()));
         store = manager.openDatabase("distributedcf");
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws BackendException {
         if (null != manager)
             manager.close();
@@ -49,9 +47,9 @@ public class ThriftDistributedStoreManagerTest extends DistributedStoreManagerTe
 
     @Override
     @Test
-    @Category({ OrderedKeyStoreTests.class })
+    @FeatureFlag(feature = JanusGraphFeature.OrderedScan)
     public void testGetDeployment() {
-        final Deployment deployment = CassandraStorageSetup.HOSTNAME == null ? Deployment.LOCAL : Deployment.REMOTE;
+        final Deployment deployment = Deployment.LOCAL;
         assertEquals(deployment, manager.getDeployment());
     }
 }

@@ -43,17 +43,21 @@ public abstract class AbstractTypedRelation extends AbstractElement implements I
 
     @Override
     public InternalRelation it() {
-        InternalVertex v = getVertex(0);
-        if (v.it().equals(v)) {
+        if (isLoadedInThisTx()) {
             return this;
         }
 
-        InternalRelation next = (InternalRelation) RelationIdentifier.get(this).findRelation(tx());
+        InternalRelation next = (InternalRelation) RelationIdentifierUtils.findRelation(RelationIdentifierUtils.get(this), tx());
         if (next == null) {
             throw InvalidElementException.removedException(this);
         }
 
         return next;
+    }
+
+    private boolean isLoadedInThisTx() {
+        InternalVertex v = getVertex(0);
+        return v == v.it();
     }
 
     @Override
@@ -109,7 +113,7 @@ public abstract class AbstractTypedRelation extends AbstractElement implements I
 
     @Override
     public RelationIdentifier id() {
-        return RelationIdentifier.get(this);
+        return RelationIdentifierUtils.get(this);
     }
 
     /* ---------------------------------------------------------------

@@ -34,7 +34,7 @@ public abstract class ConnectiveJanusPredicate extends ArrayList<JanusGraphPredi
         super(predicates);
     }
 
-    abstract ConnectiveJanusPredicate getNewNegateIntance();
+    abstract ConnectiveJanusPredicate getNewNegateInstance();
 
     abstract boolean isOr();
 
@@ -60,7 +60,7 @@ public abstract class ConnectiveJanusPredicate extends ArrayList<JanusGraphPredi
 
     @Override
     public JanusGraphPredicate negate() {
-        final ConnectiveJanusPredicate toReturn = getNewNegateIntance();
+        final ConnectiveJanusPredicate toReturn = getNewNegateInstance();
         this.stream().map(JanusGraphPredicate::negate).forEach(toReturn::add);
         return toReturn;
     }
@@ -72,6 +72,6 @@ public abstract class ConnectiveJanusPredicate extends ArrayList<JanusGraphPredi
             return false;
         }
         final Iterator<Object> itConditions = ((List<Object>) condition).iterator();
-        return this.stream().anyMatch(internalCondition -> isOr() == internalCondition.test(value, itConditions.next())) ? isOr() : !isOr();
+        return this.stream().anyMatch(internalCondition -> isOr() == internalCondition.test(value, itConditions.next())) == isOr();
     }
 }

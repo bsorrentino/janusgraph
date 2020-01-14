@@ -17,9 +17,9 @@ package org.janusgraph.diskstorage.util;
 import org.janusgraph.diskstorage.keycolumnvalue.StandardStoreFeatures;
 import org.janusgraph.diskstorage.keycolumnvalue.StoreFeatures;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Matthias Broecheler (me@matthiasb.com)
@@ -49,6 +49,15 @@ public class StorageFeaturesTest {
         assertTrue(features.hasMultiQuery());
         assertTrue(features.hasUnorderedScan());
         assertFalse(features.hasOrderedScan());
+        assertTrue(features.hasScan());
+        assertFalse(features.isDistributed());
+        assertFalse(features.hasLocking());
+
+        features = new StandardStoreFeatures.Builder().multiQuery(true).orderedScan(true).build();
+
+        assertTrue(features.hasMultiQuery());
+        assertFalse(features.hasUnorderedScan());
+        assertTrue(features.hasOrderedScan());
         assertTrue(features.hasScan());
         assertFalse(features.isDistributed());
         assertFalse(features.hasLocking());

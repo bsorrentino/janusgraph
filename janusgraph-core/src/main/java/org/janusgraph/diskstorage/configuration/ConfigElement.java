@@ -17,9 +17,9 @@ package org.janusgraph.diskstorage.configuration;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Matthias Broecheler (me@matthiasb.com)
@@ -84,13 +84,13 @@ public abstract class ConfigElement {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(namespace).toHashCode();
+        return Objects.hash(name, namespace);
     }
 
     @Override
     public boolean equals(Object oth) {
-        if (this==oth) return true;
-        else if (oth==null || !getClass().isInstance(oth)) return false;
+        if (this == oth) return true;
+        else if (!getClass().isInstance(oth)) return false;
         ConfigElement c = (ConfigElement)oth;
         return name.equals(c.name) && namespace ==c.namespace;
     }

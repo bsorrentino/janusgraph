@@ -17,7 +17,7 @@ package org.janusgraph.graphdb.tinkerpop;
 import static org.easymock.EasyMock.expect;
 
 import org.easymock.EasyMockSupport;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.janusgraph.core.attribute.Geoshape;
 import org.janusgraph.core.Cardinality;
@@ -59,6 +59,7 @@ public class JanusGraphDefaultSchemaMakerTest extends EasyMockSupport {
       expect(propertyKeyMaker.make()).andReturn(pk).anyTimes();
       expect(propertyKeyMaker.getName()).andReturn("Quux").anyTimes();
       expect(propertyKeyMaker.cardinality(Cardinality.SINGLE)).andReturn(propertyKeyMaker).anyTimes();
+      expect(propertyKeyMaker.cardinalityIsSet()).andReturn(false).anyTimes();
       expect(propertyKeyMaker.dataType(String.class)).andReturn(propertyKeyMaker);
       expect(propertyKeyMaker.dataType(Character.class)).andReturn(propertyKeyMaker);
       expect(propertyKeyMaker.dataType(Boolean.class)).andReturn(propertyKeyMaker);

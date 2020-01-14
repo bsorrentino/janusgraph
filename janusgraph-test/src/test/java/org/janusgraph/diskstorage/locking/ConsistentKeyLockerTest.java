@@ -16,9 +16,9 @@ package org.janusgraph.diskstorage.locking;
 
 import static org.janusgraph.diskstorage.locking.consistentkey.ConsistentKeyLocker.LOCK_COL_END;
 import static org.janusgraph.diskstorage.locking.consistentkey.ConsistentKeyLocker.LOCK_COL_START;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -40,9 +40,9 @@ import org.janusgraph.diskstorage.util.KeyColumn;
 
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -97,7 +97,7 @@ public class ConsistentKeyLockerTest {
     private ConsistentKeyLocker locker;
 
     @SuppressWarnings("unchecked")
-    @Before
+    @BeforeEach
     public void setupMocks() throws BackendException, NoSuchMethodException, SecurityException {
         currentTimeNS = Instant.EPOCH;
 
@@ -160,7 +160,7 @@ public class ConsistentKeyLockerTest {
         relaxedCtrl.replay();
     }
 
-    @After
+    @AfterEach
     public void verifyMocks() {
         ctrl.verify();
         relaxedCtrl.verify();
@@ -1054,7 +1054,7 @@ public class ConsistentKeyLockerTest {
         if (null != del) {
             deletions = eq(Collections.singletonList(del));
         } else {
-            deletions = eq(ImmutableList.<StaticBuffer>of());
+            deletions = eq(ImmutableList.of());
         }
 
         store.mutate(k, adds, deletions, eq(tx));
@@ -1082,11 +1082,11 @@ public class ConsistentKeyLockerTest {
         StaticBuffer k = eq(defaultLockKey);
         final List<Entry> adds = eq(Collections.singletonList(add));
         final List<StaticBuffer> deletions;
-        deletions = eq(ImmutableList.<StaticBuffer>of());
+        deletions = eq(ImmutableList.of());
         store.mutate(k, adds, deletions, eq(defaultTx));
         expectLastCall().andThrow(t);
 
-        currentTimeNS = currentTimeNS.plus((long) 1, ChronoUnit.NANOS);
+        currentTimeNS = currentTimeNS.plus(1, ChronoUnit.NANOS);
         expect(times.getTime()).andReturn(currentTimeNS);
 
         return lockCol;
@@ -1097,7 +1097,7 @@ public class ConsistentKeyLockerTest {
         expect(times.getTime()).andReturn(currentTimeNS);
         store.mutate(eq(defaultLockKey), eq(ImmutableList.of()), eq(Collections.singletonList(del)), eq(defaultTx));
 
-        currentTimeNS = currentTimeNS.plus((long) 1, ChronoUnit.NANOS);
+        currentTimeNS = currentTimeNS.plus(1, ChronoUnit.NANOS);
         expect(times.getTime()).andReturn(currentTimeNS);
     }
 

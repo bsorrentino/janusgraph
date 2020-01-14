@@ -21,7 +21,7 @@ import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.isA;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.Base64;
 import java.util.Map;
@@ -33,7 +33,7 @@ import org.easymock.CaptureType;
 import org.easymock.EasyMock;
 import org.easymock.EasyMockSupport;
 import org.easymock.IArgumentMatcher;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -62,7 +62,7 @@ public class HttpHMACAuthenticationHandlerTest extends EasyMockSupport {
         expect(msg.release()).andReturn(false);
         HttpHMACAuthenticationHandler handler = new HttpHMACAuthenticationHandler(authenticator);
         replayAll();
-        handler.channelRead(ctx,(Object) msg);
+        handler.channelRead(ctx, msg);
         verifyAll();
     }
 
@@ -83,7 +83,7 @@ public class HttpHMACAuthenticationHandlerTest extends EasyMockSupport {
 
         final HttpHMACAuthenticationHandler handler = new HttpHMACAuthenticationHandler(authenticator);
         replayAll();
-        handler.channelRead(ctx,(Object) msg);
+        handler.channelRead(ctx, msg);
         verifyAll();
     }
 
@@ -102,7 +102,7 @@ public class HttpHMACAuthenticationHandlerTest extends EasyMockSupport {
         expect(authenticator.authenticate(isA(Map.class))).andReturn(new AuthenticatedUser("foo"));
         final HttpHMACAuthenticationHandler handler = new HttpHMACAuthenticationHandler(authenticator);
         replayAll();
-        handler.channelRead(ctx,(Object) msg);
+        handler.channelRead(ctx, msg);
         verifyAll();
     }
 
@@ -125,7 +125,7 @@ public class HttpHMACAuthenticationHandlerTest extends EasyMockSupport {
         expect(msg.release()).andReturn(false);
         final HttpHMACAuthenticationHandler handler = new HttpHMACAuthenticationHandler(authenticator);
         replayAll();
-        handler.channelRead(ctx,(Object) msg);
+        handler.channelRead(ctx, msg);
         verifyAll();
         assertNotNull(credMap.getValue().get(HttpHMACAuthenticationHandler.PROPERTY_GENERATE_TOKEN));
     }
@@ -145,7 +145,7 @@ public class HttpHMACAuthenticationHandlerTest extends EasyMockSupport {
         expect(authenticator.authenticate(isA(Map.class))).andReturn(new AuthenticatedUser("foo"));
         final HttpHMACAuthenticationHandler handler = new HttpHMACAuthenticationHandler(authenticator);
         replayAll();
-        handler.channelRead(ctx,(Object) msg);
+        handler.channelRead(ctx, msg);
         verifyAll();
     }
 

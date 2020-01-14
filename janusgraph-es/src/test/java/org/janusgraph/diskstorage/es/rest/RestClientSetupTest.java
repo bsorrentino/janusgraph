@@ -14,7 +14,7 @@
 
 package org.janusgraph.diskstorage.es.rest;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.io.IOException;
@@ -48,22 +48,19 @@ import org.janusgraph.diskstorage.es.rest.util.HttpAuthTypes;
 import org.janusgraph.diskstorage.es.rest.util.RestClientAuthenticator;
 import org.janusgraph.diskstorage.es.rest.util.SSLConfigurationCallback;
 import org.janusgraph.graphdb.configuration.GraphDatabaseConfiguration;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({RestClientBuilder.class, HttpAsyncClientBuilder.class})
+@ExtendWith(MockitoExtension.class)
 public class RestClientSetupTest {
 
     private static final String INDEX_NAME = "junit";
@@ -78,6 +75,8 @@ public class RestClientSetupTest {
             ElasticSearchIndex.ES_SCROLL_KEEP_ALIVE.getDefaultValue() * 2;
     private static final String ES_BULK_REFRESH =
             String.valueOf(!Boolean.valueOf(ElasticSearchIndex.BULK_REFRESH.getDefaultValue()));
+
+    private static final Integer RETRY_ON_CONFLICT = ElasticSearchIndex.RETRY_ON_CONFLICT.getDefaultValue();
 
     private static final AtomicInteger instanceCount = new AtomicInteger();
 
@@ -99,13 +98,11 @@ public class RestClientSetupTest {
     @Mock
     private SSLContext sslContextMock;
 
+    @Mock
     private RestClientBuilder restClientBuilderMock;
 
-    @Before
+    @BeforeEach
     public void setUp() {
-
-        restClientBuilderMock = PowerMockito.mock(RestClientBuilder.class);
-
         doReturn(restClientMock).when(restClientBuilderMock).build();
     }
 
@@ -123,7 +120,7 @@ public class RestClientSetupTest {
         doReturn(restClientBuilderMock).
             when(restClientSetup).getRestClientBuilder(any());
         doReturn(restElasticSearchClientMock).when(restClientSetup).
-            getElasticSearchClient(any(RestClient.class), anyInt());
+            getElasticSearchClient(any(RestClient.class), anyInt(), anyBoolean());
 
         return restClientSetup.connect(config.restrictTo(INDEX_NAME));
     }
@@ -154,7 +151,7 @@ public class RestClientSetupTest {
         assertEquals(SCHEME_HTTP, host0.getSchemeName());
         assertEquals(ElasticSearchIndex.HOST_PORT_DEFAULT, host0.getPort());
 
-        verify(restClientSetup).getElasticSearchClient(same(restClientMock), scrollKACaptor.capture());
+        verify(restClientSetup).getElasticSearchClient(same(restClientMock), scrollKACaptor.capture(), anyBoolean());
         assertEquals(ElasticSearchIndex.ES_SCROLL_KEEP_ALIVE.getDefaultValue().intValue(),
                 scrollKACaptor.getValue().intValue());
 
@@ -180,7 +177,7 @@ public class RestClientSetupTest {
         assertEquals(SCHEME_HTTP, host1.getSchemeName());
         assertEquals(ElasticSearchIndex.HOST_PORT_DEFAULT, host1.getPort());
 
-        verify(restClientSetup).getElasticSearchClient(same(restClientMock), scrollKACaptor.capture());
+        verify(restClientSetup).getElasticSearchClient(same(restClientMock), scrollKACaptor.capture(), anyBoolean());
         assertEquals(ElasticSearchIndex.ES_SCROLL_KEEP_ALIVE.getDefaultValue().intValue(),
                 scrollKACaptor.getValue().intValue());
 
@@ -194,7 +191,8 @@ public class RestClientSetupTest {
                 put("index." + INDEX_NAME + ".hostname", ES_HOST_01).
                 put("index." + INDEX_NAME + ".port", String.valueOf(ES_PORT)).
                 put("index." + INDEX_NAME + ".elasticsearch.scroll-keep-alive", String.valueOf(ES_SCROLL_KA)).
-                put("index." + INDEX_NAME + ".elasticsearch.bulk-refresh", String.valueOf(ES_BULK_REFRESH)).
+                put("index." + INDEX_NAME + ".elasticsearch.bulk-refresh", ES_BULK_REFRESH).
+                put("index." + INDEX_NAME + ".elasticsearch.retry_on_conflict", String.valueOf(RETRY_ON_CONFLICT)).
                 build());
 
         assertNotNull(hostsConfigured);
@@ -205,11 +203,13 @@ public class RestClientSetupTest {
         assertEquals(SCHEME_HTTP, host0.getSchemeName());
         assertEquals(ES_PORT, host0.getPort());
 
-        verify(restClientSetup).getElasticSearchClient(same(restClientMock), scrollKACaptor.capture());
+        verify(restClientSetup).getElasticSearchClient(same(restClientMock), scrollKACaptor.capture(), anyBoolean());
         assertEquals(ES_SCROLL_KA,
                 scrollKACaptor.getValue().intValue());
 
         verify(restElasticSearchClientMock).setBulkRefresh(eq(ES_BULK_REFRESH));
+        verify(restElasticSearchClientMock).setRetryOnConflict(eq(RETRY_ON_CONFLICT));
+
     }
 
     @Test
@@ -228,11 +228,12 @@ public class RestClientSetupTest {
         assertEquals(SCHEME_HTTPS, host0.getSchemeName());
         assertEquals(ElasticSearchIndex.HOST_PORT_DEFAULT, host0.getPort());
 
-        verify(restClientSetup).getElasticSearchClient(same(restClientMock), scrollKACaptor.capture());
+        verify(restClientSetup).getElasticSearchClient(same(restClientMock), scrollKACaptor.capture(), anyBoolean());
         assertEquals(ElasticSearchIndex.ES_SCROLL_KEEP_ALIVE.getDefaultValue().intValue(),
                 scrollKACaptor.getValue().intValue());
 
         verify(restElasticSearchClientMock, never()).setBulkRefresh(anyString());
+        verify(restElasticSearchClientMock, times(1)).setRetryOnConflict(null);
     }
 
     private HttpClientConfigCallback authTestBase(Map<String, String> extraConfigValues) throws Exception {
@@ -268,7 +269,7 @@ public class RestClientSetupTest {
                     build()
                 );
 
-        final HttpAsyncClientBuilder hacb = PowerMockito.mock(HttpAsyncClientBuilder.class);
+        final HttpAsyncClientBuilder hacb = mock(HttpAsyncClientBuilder.class);
         doReturn(hacb).when(hacb).setDefaultCredentialsProvider(anyObject());
         hccc.customizeHttpClient(hacb);
 
@@ -329,8 +330,7 @@ public class RestClientSetupTest {
         assertEquals(1, customAuth.numInitCalls);
 
         // verifying that the custom callback is in the chain
-        final HttpAsyncClientBuilder hacb = PowerMockito.mock(HttpAsyncClientBuilder.class);
-        doReturn(hacb).when(hacb).setDefaultCredentialsProvider(anyObject());
+        final HttpAsyncClientBuilder hacb = mock(HttpAsyncClientBuilder.class);
         hccc.customizeHttpClient(hacb);
 
         assertEquals(1, customAuth.customizeHttpClientHistory.size());

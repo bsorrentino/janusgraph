@@ -35,7 +35,7 @@ import org.janusgraph.diskstorage.WriteBuffer;
  * @param <V> Type of the attribute associated with the AttributeSerializer
  * @author Matthias Br&ouml;cheler (http://www.matthiasb.com)
  * @see org.janusgraph.core.schema.RelationTypeMaker
- * @see <a href="http://docs.janusgraph.org/latest/serializer.html">
+ * @see <a href="https://docs.janusgraph.org/advanced-topics/serializer/">
  *      "Datatype and Attribute Serializer Configuration" manual chapter</a>
  */
 public interface AttributeSerializer<V> {
@@ -69,7 +69,7 @@ public interface AttributeSerializer<V> {
      * @param value to verify
      */
     default void verifyAttribute(V value) {
-        Preconditions.checkArgument(value != null,"Provided value cannot be null");
+        Preconditions.checkNotNull(value,"Provided value cannot be null");
     }
 
     /**
@@ -82,7 +82,7 @@ public interface AttributeSerializer<V> {
      */
     default V convert(Object value) {
         try {
-            return (V)value;
+            return (V) value;
         } catch (ClassCastException e) {
             return null;
         }

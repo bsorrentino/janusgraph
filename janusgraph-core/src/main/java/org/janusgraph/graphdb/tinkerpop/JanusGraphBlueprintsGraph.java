@@ -77,7 +77,7 @@ public abstract class JanusGraphBlueprintsGraph implements JanusGraph {
         tinkerpopTxContainer.readWrite();
 
         JanusGraphBlueprintsTransaction tx = txs.get();
-        Preconditions.checkState(tx!=null,"Invalid read-write behavior configured: " +
+        Preconditions.checkNotNull(tx,"Invalid read-write behavior configured: " +
                 "Should either open transaction or throw exception.");
         return tx;
     }
@@ -97,6 +97,7 @@ public abstract class JanusGraphBlueprintsGraph implements JanusGraph {
 
     @Override
     public synchronized void close() {
+        txs.remove();
         txs = null;
     }
 
@@ -125,11 +126,11 @@ public abstract class JanusGraphBlueprintsGraph implements JanusGraph {
     @Override
     public <I extends Io> I io(final Io.Builder<I> builder) {
         if (builder.requiresVersion(GryoVersion.V1_0) || builder.requiresVersion(GraphSONVersion.V1_0)) {
-            return (I) builder.graph(this).onMapper(mapper ->  mapper.addRegistry(JanusGraphIoRegistryV1d0.getInstance())).create();
+            return (I) builder.graph(this).onMapper(mapper ->  mapper.addRegistry(JanusGraphIoRegistryV1d0.instance())).create();
         } else if (builder.requiresVersion(GraphSONVersion.V2_0)) {
-            return (I) builder.graph(this).onMapper(mapper ->  mapper.addRegistry(JanusGraphIoRegistry.getInstance())).create();
+            return (I) builder.graph(this).onMapper(mapper ->  mapper.addRegistry(JanusGraphIoRegistry.instance())).create();
         } else {
-            return (I) builder.graph(this).onMapper(mapper ->  mapper.addRegistry(JanusGraphIoRegistry.getInstance())).create();
+            return (I) builder.graph(this).onMapper(mapper ->  mapper.addRegistry(JanusGraphIoRegistry.instance())).create();
         }
     }
 
@@ -181,13 +182,11 @@ public abstract class JanusGraphBlueprintsGraph implements JanusGraph {
     }
 
     @Override
-    @Deprecated
     public JanusGraphMultiVertexQuery multiQuery(JanusGraphVertex... vertices) {
         return getAutoStartTx().multiQuery(vertices);
     }
 
     @Override
-    @Deprecated
     public JanusGraphMultiVertexQuery multiQuery(Collection<JanusGraphVertex> vertices) {
         return getAutoStartTx().multiQuery(vertices);
     }
@@ -319,13 +318,10 @@ public abstract class JanusGraphBlueprintsGraph implements JanusGraph {
         }
 
         @Override
-        public void close() {
-            close(this);
-        }
-
-        void close(Transaction tx) {
-            closeConsumerInternal.get().accept(tx);
-            Preconditions.checkState(!tx.isOpen(),"Invalid close behavior configured: Should close transaction. [%s]", closeConsumerInternal);
+        protected void doClose() {
+            super.doClose();
+            transactionListeners.remove();
+            txs.remove();
         }
 
         @Override

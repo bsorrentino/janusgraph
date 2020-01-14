@@ -14,25 +14,22 @@
 
 package org.janusgraph.graphdb.thrift;
 
-import org.janusgraph.CassandraStorageSetup;
+import org.janusgraph.JanusGraphCassandraThriftContainer;
+import org.janusgraph.TestCategory;
 import org.janusgraph.diskstorage.configuration.WriteConfiguration;
 import org.janusgraph.graphdb.JanusGraphConcurrentTest;
-import org.janusgraph.testcategory.PerformanceTests;
+import org.junit.jupiter.api.Tag;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-import org.junit.BeforeClass;
-import org.junit.experimental.categories.Category;
-
-@Category({PerformanceTests.class})
+@Tag(TestCategory.PERFORMANCE_TESTS)
+@Testcontainers
 public class ThriftGraphConcurrentTest extends JanusGraphConcurrentTest {
+    @Container
+    public static final JanusGraphCassandraThriftContainer thriftContainer = new JanusGraphCassandraThriftContainer();
 
     @Override
     public WriteConfiguration getConfiguration() {
-        return CassandraStorageSetup.getCassandraThriftGraphConfiguration(getClass().getSimpleName());
-    }
-
-
-    @BeforeClass
-    public static void beforeClass() {
-        CassandraStorageSetup.startCleanEmbedded();
+        return thriftContainer.getThriftConfiguration(getClass().getSimpleName()).getConfiguration();
     }
 }

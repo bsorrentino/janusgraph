@@ -18,10 +18,10 @@ import org.janusgraph.diskstorage.BackendException;
 import org.janusgraph.diskstorage.Entry;
 import org.janusgraph.diskstorage.EntryList;
 import org.janusgraph.diskstorage.StaticBuffer;
+import org.janusgraph.diskstorage.inmemory.InMemoryStoreManager;
 import org.janusgraph.diskstorage.keycolumnvalue.*;
 import org.janusgraph.diskstorage.keycolumnvalue.cache.CacheTransaction;
 import org.janusgraph.diskstorage.keycolumnvalue.cache.KCVSCache;
-import org.janusgraph.diskstorage.keycolumnvalue.inmemory.InMemoryStoreManager;
 import org.janusgraph.diskstorage.util.BufferUtil;
 import org.janusgraph.diskstorage.util.StandardBaseTransactionConfig;
 import org.janusgraph.diskstorage.util.StaticArrayEntry;
@@ -29,9 +29,9 @@ import org.janusgraph.diskstorage.util.WriteByteBuffer;
 
 import org.janusgraph.diskstorage.util.time.TimestampProvider;
 import org.janusgraph.diskstorage.util.time.TimestampProviders;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Matthias Broecheler (me@matthiasb.com)
@@ -54,7 +54,7 @@ public abstract class KCVSCacheTest {
     public CounterKCVS store;
     public KCVSCache cache;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         storeManager = new InMemoryStoreManager();
         store = new CounterKCVS(storeManager.openDatabase(STORE_NAME));
@@ -75,7 +75,7 @@ public abstract class KCVSCacheTest {
         return new CacheTransaction(getStoreTx(), storeManager, 1024, MAX_WRITE_TIME, false);
     }
 
-    @After
+    @AfterEach
     public void shutdown() throws Exception {
         cache.close();
         storeManager.close();
@@ -97,7 +97,7 @@ public abstract class KCVSCacheTest {
 
     @Test
     public void testSmallCache() throws Exception {
-        final int numKeys = 100, numCols = 10; //numCols must be greater than or equal to 10 as it is assummed below
+        final int numKeys = 100, numCols = 10; //numCols must be greater than or equal to 10 as it is assumed below
         final int repeats = 100, clearEvery = 20, numMulti = 10;
         loadStore(numKeys,numCols);
 

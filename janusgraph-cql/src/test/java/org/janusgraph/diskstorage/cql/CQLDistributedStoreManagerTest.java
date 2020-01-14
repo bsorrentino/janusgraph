@@ -14,32 +14,38 @@
 
 package org.janusgraph.diskstorage.cql;
 
+import org.janusgraph.JanusGraphCassandraContainer;
 import org.janusgraph.diskstorage.BackendException;
 import org.janusgraph.diskstorage.DistributedStoreManagerTest;
 import org.janusgraph.diskstorage.common.DistributedStoreManager.Deployment;
-import org.janusgraph.testcategory.OrderedKeyStoreTests;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import org.janusgraph.diskstorage.configuration.ModifiableConfiguration;
+import org.janusgraph.testutil.FeatureFlag;
+import org.janusgraph.testutil.JanusGraphFeature;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Testcontainers
 public class CQLDistributedStoreManagerTest extends DistributedStoreManagerTest<CQLStoreManager> {
 
-    @BeforeClass
-    public static void startCassandra() {
-        CassandraStorageSetup.startCleanEmbedded();
+    @Container
+    public static final JanusGraphCassandraContainer cqlContainer = new JanusGraphCassandraContainer();
+
+    protected ModifiableConfiguration getBaseStorageConfiguration() {
+        return cqlContainer.getConfiguration(getClass().getSimpleName());
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws BackendException {
-        manager = new CachingCQLStoreManager(CassandraStorageSetup.getCQLConfiguration(this.getClass().getSimpleName()));
+        manager = new CachingCQLStoreManager(getBaseStorageConfiguration());
         store = manager.openDatabase("distributedcf");
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws BackendException {
         if (null != manager)
             manager.close();
@@ -47,9 +53,9 @@ public class CQLDistributedStoreManagerTest extends DistributedStoreManagerTest<
 
     @Override
     @Test
-    @Category({ OrderedKeyStoreTests.class })
+    @FeatureFlag(feature = JanusGraphFeature.OrderedScan)
     public void testGetDeployment() {
-        final Deployment deployment = CassandraStorageSetup.HOSTNAME == null ? Deployment.LOCAL : Deployment.REMOTE;
+        final Deployment deployment = Deployment.LOCAL;
         assertEquals(deployment, manager.getDeployment());
     }
 }

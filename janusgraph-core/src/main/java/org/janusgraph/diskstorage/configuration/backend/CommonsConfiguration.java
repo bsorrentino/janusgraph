@@ -50,8 +50,7 @@ public class CommonsConfiguration implements WriteConfiguration {
     }
 
     public CommonsConfiguration(Configuration config) {
-        Preconditions.checkArgument(config!=null);
-        this.config = config;
+        this.config = Preconditions.checkNotNull(config);
     }
 
     public Configuration getCommonConfiguration() {
@@ -96,7 +95,7 @@ public class CommonsConfiguration implements WriteConfiguration {
         } else if (Duration.class.isAssignableFrom(dataType)) {
             // This is a conceptual leak; the config layer should ideally only handle standard library types
             Object o = config.getProperty(key);
-            if (Duration.class.isInstance(o)) {
+            if (o instanceof Duration) {
                 return (O) o;
             } else {
                 String[] comps = o.toString().split("\\s");

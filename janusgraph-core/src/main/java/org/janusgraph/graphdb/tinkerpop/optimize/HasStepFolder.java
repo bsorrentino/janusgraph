@@ -16,6 +16,7 @@ package org.janusgraph.graphdb.tinkerpop.optimize;
 
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.lambda.ElementValueTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.step.map.FlatMapStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.map.NoOpBarrierStep;
 import org.apache.tinkerpop.gremlin.process.traversal.util.AndP;
@@ -23,13 +24,12 @@ import org.apache.tinkerpop.gremlin.process.traversal.util.ConnectiveP;
 import org.janusgraph.core.Cardinality;
 import org.janusgraph.core.PropertyKey;
 import org.janusgraph.core.JanusGraphTransaction;
+import org.janusgraph.graphdb.query.JanusGraphPredicateUtils;
 import org.janusgraph.graphdb.query.QueryUtil;
-import org.janusgraph.graphdb.query.JanusGraphPredicate;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.Step;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.step.HasContainerHolder;
-import org.apache.tinkerpop.gremlin.process.traversal.step.Ranging;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.OrStep;
 import org.apache.tinkerpop.gremlin.process.traversal.step.filter.RangeGlobalStep;
@@ -42,9 +42,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.step.util.HasContainer;
 import org.javatuples.Pair;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -79,7 +77,7 @@ public interface HasStepFolder<S, E> extends Step<S, E> {
             final List<? extends P<?>> predicates = ((ConnectiveP<?>) has.getPredicate()).getPredicates();
             return predicates.stream().allMatch(p-> validJanusGraphHas(new HasContainer(has.getKey(), p)));
         } else {
-            return JanusGraphPredicate.Converter.supports(has.getBiPredicate());
+            return JanusGraphPredicateUtils.supports(has.getBiPredicate());
         }
     }
 
@@ -144,9 +142,7 @@ public interface HasStepFolder<S, E> extends Step<S, E> {
                     traversal.removeStep(currentStep);
                 }
             }
-            else if (currentStep instanceof IdentityStep) {
-                // do nothing, has no impact
-            } else if (currentStep instanceof NoOpBarrierStep) {
+            else if (currentStep instanceof IdentityStep || currentStep instanceof NoOpBarrierStep) {
                 // do nothing, has no impact
             } else {
                 break;
@@ -168,7 +164,7 @@ public interface HasStepFolder<S, E> extends Step<S, E> {
                 ((OrStep<?>) currentStep).getLocalChildren().forEach(t ->localFoldInHasContainer(janusgraphStep, t.getStartStep(), t, rootTraversal));
                 traversal.removeStep(currentStep);
             } else if (currentStep instanceof HasContainerHolder){
-                final Iterable<HasContainer> containers = ((HasContainerHolder) currentStep).getHasContainers().stream().map(c -> JanusGraphPredicate.Converter.convert(c)).collect(Collectors.toList());
+                final Iterable<HasContainer> containers = ((HasContainerHolder) currentStep).getHasContainers().stream().map(c -> JanusGraphPredicateUtils.convert(c)).collect(Collectors.toList());
                 if  (validFoldInHasContainer(currentStep, true)) {
                     janusgraphStep.addAll(containers);
                     currentStep.getLabels().forEach(janusgraphStep::addLabel);
@@ -186,7 +182,7 @@ public interface HasStepFolder<S, E> extends Step<S, E> {
         Step<?, ?> currentStep = tinkerpopStep;
         while (true) {
             if (currentStep instanceof HasContainerHolder) {
-                final Iterable<HasContainer> containers = ((HasContainerHolder) currentStep).getHasContainers().stream().map(c -> JanusGraphPredicate.Converter.convert(c)).collect(Collectors.toList());
+                final Iterable<HasContainer> containers = ((HasContainerHolder) currentStep).getHasContainers().stream().map(c -> JanusGraphPredicateUtils.convert(c)).collect(Collectors.toList());
                 final List<HasContainer> hasContainers = janusgraphStep.addLocalAll(containers);
                 currentStep.getLabels().forEach(janusgraphStep::addLabel);
                 traversal.removeStep(currentStep);
@@ -207,7 +203,7 @@ public interface HasStepFolder<S, E> extends Step<S, E> {
                 final Iterable<HasContainer> containers = ((HasContainerHolder) currentStep).getHasContainers();
                 toReturn = toReturn == null ? validJanusGraphHas(containers) : toReturn && validJanusGraphHas(containers);
             } else if (!(currentStep instanceof IdentityStep) && !(currentStep instanceof NoOpBarrierStep) && !(currentStep instanceof RangeGlobalStep) && !(currentStep instanceof OrderGlobalStep)) {
-                toReturn = toReturn == null ? false : (toReturn && defaultValue);
+                toReturn = toReturn != null && (toReturn && defaultValue);
                 break;
             }
             currentStep = currentStep.getNextStep();
@@ -328,5 +324,35 @@ public interface HasStepFolder<S, E> extends Step<S, E> {
                 traversal.removeStep(nextStep);
             }
         }
+    }
+
+    /**
+     * @param janusgraphStep The step to test
+     * @return True if there are 'has' steps following this step and no subsequent range limit step
+     */
+    static boolean foldableHasContainerNoLimit(FlatMapStep<?, ?> janusgraphStep) {
+        boolean foldableHasContainerNoLimit = false;
+        Step<?, ?> currentStep = janusgraphStep.getNextStep();
+        while (true) {
+            if (currentStep instanceof OrStep) {
+                for (final Traversal.Admin<?, ?> child : ((OrStep<?>) currentStep).getLocalChildren()) {
+                    if (!validFoldInHasContainer(child.getStartStep(), false)){
+                        return false;
+                    }
+                }
+                foldableHasContainerNoLimit =  true;
+            } else if (currentStep instanceof HasContainerHolder) {
+                if  (validFoldInHasContainer(currentStep, true)) {
+                    foldableHasContainerNoLimit =  true;
+                }
+            } else if (currentStep instanceof RangeGlobalStep) {
+                return false;
+            } else if (!(currentStep instanceof IdentityStep) && !(currentStep instanceof NoOpBarrierStep)) {
+                break;
+            }
+            currentStep = currentStep.getNextStep();
+        }
+
+        return foldableHasContainerNoLimit;
     }
 }

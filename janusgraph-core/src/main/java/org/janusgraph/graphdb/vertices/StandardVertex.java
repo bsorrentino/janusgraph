@@ -25,7 +25,6 @@ import org.janusgraph.graphdb.transaction.addedrelations.AddedRelationsContainer
 import org.janusgraph.graphdb.transaction.addedrelations.ConcurrentAddedRelations;
 import org.janusgraph.graphdb.transaction.addedrelations.SimpleAddedRelations;
 import org.janusgraph.util.datastructures.Retriever;
-import java.util.List;
 
 /**
  * @author Matthias Broecheler (me@matthiasb.com)
@@ -33,7 +32,8 @@ import java.util.List;
 
 public class StandardVertex extends AbstractVertex {
 
-    private byte lifecycle;
+    private final Object lifecycleMutex = new Object();
+    private volatile byte lifecycle;
     private volatile AddedRelationsContainer addedRelations=AddedRelationsContainer.EMPTY;
 
     public StandardVertex(final StandardJanusGraphTx tx, final long id, byte lifecycle) {
@@ -41,8 +41,10 @@ public class StandardVertex extends AbstractVertex {
         this.lifecycle=lifecycle;
     }
 
-    public synchronized final void updateLifeCycle(ElementLifeCycle.Event event) {
-        this.lifecycle = ElementLifeCycle.update(lifecycle,event);
+    public final void updateLifeCycle(ElementLifeCycle.Event event) {
+        synchronized(lifecycleMutex) {
+            this.lifecycle = ElementLifeCycle.update(lifecycle,event);
+        }
     }
 
     @Override
@@ -72,7 +74,7 @@ public class StandardVertex extends AbstractVertex {
     }
 
     @Override
-    public List<InternalRelation> getAddedRelations(Predicate<InternalRelation> query) {
+    public Iterable<InternalRelation> getAddedRelations(Predicate<InternalRelation> query) {
         return addedRelations.getView(query);
     }
 

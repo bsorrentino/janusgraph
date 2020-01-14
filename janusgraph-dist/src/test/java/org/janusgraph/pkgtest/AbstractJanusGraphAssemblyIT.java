@@ -14,7 +14,7 @@
 
 package org.janusgraph.pkgtest;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -49,7 +49,7 @@ public abstract class AbstractJanusGraphAssemblyIT {
 
         try {
             props = new Properties();
-            java.io.FileReader fr = new FileReader(Joiner.on(File.separator).join(new String[] { "target", "test-classes", "target.properties" }));;
+            java.io.FileReader fr = new FileReader(Joiner.on(File.separator).join(new String[] { "target", "test-classes", "target.properties" }));
             props.load(fr);
             fr.close();
         } catch (IOException e) {
@@ -99,7 +99,7 @@ public abstract class AbstractJanusGraphAssemblyIT {
     }
 
     protected void unzipAndRunExpect(String expectTemplateName) throws Exception {
-        unzipAndRunExpect(expectTemplateName, Collections.<String, String>emptyMap());
+        unzipAndRunExpect(expectTemplateName, Collections.emptyMap());
     }
 
     protected void unzipAndRunExpect(String expectTemplateName, String graphConfig, String graphToString) throws Exception {

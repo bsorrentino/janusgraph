@@ -18,7 +18,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import org.janusgraph.util.system.IOUtils;
 import org.apache.commons.io.FileUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +50,7 @@ public class GraphOfTheGodsCompatIT extends AbstractJanusGraphAssemblyIT {
             String l;
             while (null != (l = compatReader.readLine())) {
                 lineNumber++;
-                String tokens[] = l.split(",");
+                String[] tokens = l.split(",");
                 if (3 != tokens.length) {
                     log.warn("Ignoring line {} (splitting on commas yielded {} tokens instead of the expected {}): {}", lineNumber, tokens.length, 3, l);
                     continue;

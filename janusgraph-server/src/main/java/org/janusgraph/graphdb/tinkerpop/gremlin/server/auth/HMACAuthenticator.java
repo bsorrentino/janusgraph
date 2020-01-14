@@ -23,6 +23,7 @@ import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
@@ -90,17 +91,17 @@ public class HMACAuthenticator extends JanusGraphAbstractAuthenticator {
     }
 
     public void setup(final Map<String,Object> config) {
-    		Preconditions.checkArgument(config != null, "Credential configuration cannot be null");
+        Preconditions.checkArgument(config != null, "Credential configuration cannot be null");
         Preconditions.checkState(config.containsKey(CONFIG_HMAC_SECRET), 
         			String.format("Credential configuration missing the %s key", CONFIG_HMAC_SECRET));
 
-        if (null != config && config.containsKey(CONFIG_HMAC_ALGO)) {
+        if (config.containsKey(CONFIG_HMAC_ALGO)) {
             hmacAlgo = config.get(CONFIG_HMAC_ALGO).toString();
         } else {
             hmacAlgo = DEFAULT_HMAC_ALGO;
         }
 
-        if (null != config && config.containsKey(CONFIG_TOKEN_TIMEOUT)) {
+        if (config.containsKey(CONFIG_TOKEN_TIMEOUT)) {
             timeout = ((Number) config.get(CONFIG_TOKEN_TIMEOUT)).longValue();
         } else {
             timeout = DEFAULT_HMAC_TOKEN_TIMEOUT;
@@ -108,25 +109,19 @@ public class HMACAuthenticator extends JanusGraphAbstractAuthenticator {
 
         super.setup(config);
 
-        if (null != config & config.containsKey(CONFIG_HMAC_SECRET)) {
-            secret = config.get(CONFIG_HMAC_SECRET).toString().toCharArray();
-        } else {
-            secret = DEFAULT_HMAC_SECRET;
-        }
+        secret = config.containsKey(CONFIG_HMAC_SECRET) ? config.get(CONFIG_HMAC_SECRET).toString().toCharArray() :
+            DEFAULT_HMAC_SECRET;
     }
 
     @Override
     public AuthenticatedUser authenticate(final Map<String, String> credentials) throws AuthenticationException {
         if (credentials.get(PROPERTY_GENERATE_TOKEN) != null) {
-            final AuthenticatedUser user = authenticateUser(credentials);
-            if (user == null) {
-                throw new AuthenticationException(AUTH_ERROR);
-            }
             credentials.put(PROPERTY_TOKEN, getToken(credentials));
-            return user;
+            return authenticateUser(credentials);
         } else if (credentials.get(PROPERTY_TOKEN) != null) {
             if (validateToken(credentials)) {
-                return new AuthenticatedUser(credentials.get(PROPERTY_USERNAME));
+                final Map<String, String> tokenMap = parseToken(credentials.get(PROPERTY_TOKEN));
+                return new AuthenticatedUser(tokenMap.get(PROPERTY_USERNAME));
             } else {
                 throw new AuthenticationException("Invalid token");
             }
@@ -136,7 +131,7 @@ public class HMACAuthenticator extends JanusGraphAbstractAuthenticator {
     }
 
     private AuthenticatedUser authenticateUser(final Map<String, String> credentials) throws AuthenticationException {
-        final Vertex v = credentialStore.findUser(credentials.get(PROPERTY_USERNAME));
+        final Vertex v = findUser(credentials.get(PROPERTY_USERNAME));
         if (null == v || !BCrypt.checkpw(credentials.get(PROPERTY_PASSWORD), v.value(PROPERTY_PASSWORD))) {
             throw new AuthenticationException(AUTH_ERROR);
         }
@@ -148,11 +143,11 @@ public class HMACAuthenticator extends JanusGraphAbstractAuthenticator {
         final Map<String, String> tokenMap = parseToken(token);
         final String username = tokenMap.get(PROPERTY_USERNAME);
         final String time = tokenMap.get("time");
-        final String password = credentialStore.findUser(username).value(PROPERTY_PASSWORD);
+        final String password = findUser(username).value(PROPERTY_PASSWORD);
         final String salt = getBcryptSaltFromStoredPassword(password);
         final String expected = generateToken(username, salt, time);
         final Long timeLong = Long.parseLong(time);
-        final Long currentTime = new Date().getTime();
+        final long currentTime = new Date().getTime();
         final String base64Token = new String(Base64.getUrlEncoder().encode(token.getBytes()));
         //Short circuit if the lengths aren't the same or time has expired
         if (timeLong + timeout < currentTime || expected.length() != base64Token.length()) {
@@ -180,12 +175,12 @@ public class HMACAuthenticator extends JanusGraphAbstractAuthenticator {
             secretAndSalt.put(secret);
             secretAndSalt.put(":");
             secretAndSalt.put(salt);
-            final String tokenPrefix = username + ":" + time.toString() + ":";
+            final String tokenPrefix = username + ":" + time + ":";
             final SecretKeySpec keySpec = new SecretKeySpec(toBytes(secretAndSalt.array()), hmacAlgo);
             final Mac hmac = Mac.getInstance(hmacAlgo);
             hmac.init(keySpec);
             hmac.update(username.getBytes());
-            hmac.update(time.toString().getBytes());
+            hmac.update(time.getBytes());
             final Base64.Encoder encoder = Base64.getUrlEncoder();
             final byte[] hmacbytes = encoder.encode(hmac.doFinal());
             final byte[] tokenbytes = tokenPrefix.getBytes();
@@ -198,7 +193,7 @@ public class HMACAuthenticator extends JanusGraphAbstractAuthenticator {
 
     private String getToken(final Map<String, String> credentials) {
         final String username = credentials.get(PROPERTY_USERNAME);
-        final Vertex user = credentialStore.findUser(username);
+        final Vertex user = findUser(username);
         final String password = user.value(PROPERTY_PASSWORD);
         final String salt = getBcryptSaltFromStoredPassword(password);
         final String time = Long.toString(new Date().getTime());
@@ -207,13 +202,13 @@ public class HMACAuthenticator extends JanusGraphAbstractAuthenticator {
 
     //In BCrypt, the salt is the 22 chars after the 3rd $
     private String getBcryptSaltFromStoredPassword(String password) {
-        Integer saltStart = StringUtils.ordinalIndexOf(password, "$", 3);
+        int saltStart = StringUtils.ordinalIndexOf(password, "$", 3);
         return password.substring(saltStart + 1, saltStart + 23);
     }
 
     private byte[] toBytes(char[] chars) {
       CharBuffer charBuffer = CharBuffer.wrap(chars);
-      ByteBuffer byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
+      ByteBuffer byteBuffer = StandardCharsets.UTF_8.encode(charBuffer);
       byte[] bytes = Arrays.copyOfRange(byteBuffer.array(),
               byteBuffer.position(), byteBuffer.limit());
       Arrays.fill(charBuffer.array(), '\u0000'); //Clear sensitive data from memory
